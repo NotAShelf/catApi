@@ -7,6 +7,7 @@ require('dotenv').config();
 const port = process.env.PORT;
 app.listen(port, () => {
     console.log('App listening at http://localhost:' + port); 
+    console.log('Godspeed, little fella!');
 });
 
 app.get('/', (req, res) => {
@@ -32,11 +33,11 @@ app.get('/:id', (req, res) => {
     }
 });
 
-app.get('/api/listimgs', (req, res) => {
+app.get('/api/list', (req, res) => {
    return res.json(getAllImageIds());
 });
 
-app.get('/api/randomimg', (req, res) => {
+app.get('/api/random', (req, res) => {
     return res.json(getRandomImageApi());
 });
 
