@@ -8,7 +8,7 @@ const port = process.env.PORT;
 const customurl = process.env.CUSTOMURL;
 
 app.listen(port, () => {
-    console.log('App listening at http://localhost:' + port); 
+    console.log('App listening at http://localhost:' + port || 3005); 
     console.log('Godspeed, little fella!');
 });
 
