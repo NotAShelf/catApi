@@ -5,6 +5,8 @@ const fs = require('fs');
 require('dotenv').config();
 
 const port = process.env.PORT;
+const customurl = process.env.CUSTOMURL;
+
 app.listen(port, () => {
     console.log('App listening at http://localhost:' + port); 
     console.log('Godspeed, little fella!');
@@ -46,7 +48,7 @@ app.get('/api/:id', (req, res) => {
     if (image) {
         return res.json({
             id: parseInt(req.params.id),
-            url: 'https://cat.frozendev.tk' + req.params.id,
+            url: 'https://' + customurl + req.params.id,
         });
     } else {
         return res.json({
@@ -91,6 +93,6 @@ const getRandomImageApi = () => {
     const id = path.substring(0, path.length - 4).split('-')[1];
     return {
         id: parseInt(id),
-        url: 'https://cat.frozendev.tk' + id,
+        url: 'https://' + customurl + id,
     };
 };
