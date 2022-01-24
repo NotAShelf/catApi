@@ -1,0 +1,13 @@
+## Node Packages
+npm-debug.log
+yarn-error.log
+/node_modules
+
+## Environmental Variables
+.env
+.env.backup
+.env.development
+
+## IDE
+/.vscode
+/.idea
