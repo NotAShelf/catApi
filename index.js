@@ -22,9 +22,9 @@ if(process.env.PORT) {
     logger2
         .success('Custom port is set. Using custom port ' + port)
     app.listen(port, () => {
-            if(process.env.CUSTOMURL) {
-                const customurl = process.env.CUSTOMURL;
-                logger2
+            if(process.env.CUSTOMURL) { // Check if customURL is defined .env
+                const customurl = process.env.CUSTOMURL; // if it is, set customurl variable to the value in .env
+                logger2 // alternative to console.lgg because looks better leave me alone
                     .success('Custom URL defined as ' + customurl)
                     .info('App listening at ' + 'https://' + customurl)
                     .comment('Godspeed, little fella!')
