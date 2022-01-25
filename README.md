@@ -1,4 +1,5 @@
 # 🐾 catApi
+
 > **catApi** is *scuffed* website (fully equipped with an API, obviously) to display pictures of cats from the `/images/` directory 
 which are supplied by the kind people who sent me pictures of their cats, and also my own. More cats are always welcome in the paw zone.
 ###### I was initially going to name this project "Onlypaws" but I am too lazy to implement a donation system.
@@ -50,16 +51,18 @@ and thus, we are currently on the V1 branch. V2 will *probably* introduce proper
 TODO
 
 ## API Documentation (WIP)
-* **`/api/id`**
+
+#### `/api/id`
 > return data about the specified image, by ID 
 > - **e.g. `http://localhost:3000/api/3`**
-* **`/api/list`**
+#### `/api/list`
 > return a list of all images on the server (explicitly from the `/images` directory)
 > - e.g. `http://localhost:3000/api/list`
-* **`/api/random`** 
+
+#### `/api/random`
 > returns data about a random image on the server
 > - e.g `http://localhost:3000/api/random`
 
 ## License
 
-**catApi** is licensed under the [MIT](https://github.com/NotAShelf/catApi/blob/v1/LICENSE) license.
+> **catApi** is licensed under the [MIT](https://github.com/NotAShelf/catApi/blob/v1/LICENSE) license.
