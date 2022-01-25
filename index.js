@@ -61,7 +61,8 @@ if(process.env.PORT) {
             }
             else {
                 logger2
-                    .error('Custom URL not defined. Falling back to http://localhost:' + port)
+                    .error('Custom URL not defined. Falling back to localhost')
+                    .info('App listening at http://localhost:' + port)
                     .comment('Godspeed, little fella!')
                 const getRandomImageApi = () => {
                     const path = getRandomImagePath();
@@ -99,7 +100,7 @@ else {
     app.listen(port, () => {
         if(process.env.CUSTOMURL) {
             logger2
-                .success('Custom URL defined. Using custom url ' + customurl + '\n(Hope you have configured a reverse proxy.)')
+                .success('Custom URL defined. Using custom url ' + customurl)
                 .success('App listening at ' + 'https://' + customurl); 
             console.log('Godspeed, little fella!');
             const getRandomImageApi = () => {
@@ -117,7 +118,7 @@ else {
         }
         else {
             logger2
-                .error('Custom URL not defined. Falling back to http://localhost:' + port)
+                .error('Custom URL not defined. Falling back to localhost')
                 .info('App listening at ' + 'http://localhost:' + port)
                 .comment('Godspeed, little fella!')
             const getRandomImageApi = () => {
@@ -136,11 +137,6 @@ else {
         }
     });
 }
-
-// Check if a custom port is set in .env
-// if it is, then check if a custom url is defined. 
-// Makes sure API routes are configured correctly.
-
 
 app.get('/', (req, res) => {
     res.sendFile(getRandomImagePath(), (err) => {
