@@ -1,0 +1,23 @@
+## DO NOT USE ##
+services:
+  catweb:
+    build: .
+    ports:
+      - "${PORT}:${PORT}"
+    command: npm start
+    container_name: catApi
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: ./images
+        target: /opt/catApi/images
+      - type: bind
+        source: ./.env
+        target: /opt/catApi/.env
+    tmpfs: /tmp # temp files such are stored here
+    working_dir: /opt/catApi
+    tty: true
+    environment:
+      - NODE_ENV=production # for production
+      - LOG_LEVEL=debug # debug, info, warn, error
+      - FORCE_COLOR=3 # force color output
