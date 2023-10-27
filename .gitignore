@@ -13,3 +13,7 @@ yarn-error.log
 ## IDE
 /.vscode
 /.idea
+
+# Build Artifacts
+result*
+catApi
