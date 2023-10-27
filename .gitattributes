@@ -1,0 +1,4 @@
+go.mod linguist-language=Go
+go.sum linguist-language=Go
+*.go linguist-language=Go
+vendor/* linguist-language=Go

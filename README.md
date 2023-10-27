@@ -1,68 +1,39 @@
 # 🐾 catApi
 
-> **catApi** is *scuffed* website (fully equipped with an API, obviously) to display pictures of cats from the `/images/` directory 
-which are supplied by the kind people who sent me pictures of their cats, and also my own. More cats are always welcome in the paw zone.
-###### I was initially going to name this project "Onlypaws" but I am too lazy to implement a donation system.
+> **catApi** is a minimal, self-hostable API endpoint for serving pictures of, you guessed it, cats!
+> but it could be used to serve anything, really
 
+## Usage
 
-## Self-Hosting
-If you are, for some reason, interested in self-hosting your own version of this website; feel absolutely free to. Fork it, download it, mirror it. Not just that I *don't care* what you do with the code, I will also 
-appreciate any kind of contributions that you might decide to make. I have been told multiple times that my code is crude and scuffed, so feel free to fix that. Good luck, though.
+There are two ways to "use" **catApi** - you can either serve it, blessing the world with pictures of your cat
+or be served. Below is the API documentation for visiting an existing instance of catApi.
 
-### Dependencies
-* [git](https://git-scm.com/downloads)
-* [NodeJS](https://nodejs.org/en/download/)
-* npm or [Yarn](https://classic.yarnpkg.com/lang/en/docs/install/) (I recommend Yarn)
+### API Documentation
 
-### With Yarn/npm
+**catApi** exposes several endpoints.
 
-```sh
-# Clone this git repository 
-git clone https://github.com/NotAShelf/catApi.git
+#### ID
 
-# Move to the new directory
-cd catApi
+`/api/id` will return the image with the associated ID.
 
-# Install dependencies
-yarn 
+For example **`http://localhost:3000/api/id?id=3`** will return the image with the ID of "3".
 
-# Alternatively, to install dependencies
-npm install
+#### List
 
-# Create the .env file for environmental variables (Optional, there are fallback options for both environmental variables)
-cp .sample.env .env
+`/api/list` will return eturn a JSON object containing data about the images within the /images directory
 
-# Start the application with
-yarn start
+For example, **`http://localhost:3000/api/random`** will return a JSON object that might be as follows
 
-# Alternatively, to start the application
-npm run start
-```
+> `[{"id":"0","url":"/api/id?id=0"},{"id":"1","url":"/api/id?id=1"},{"id":"2","url":"/api/id?id=2"}]`
 
-### With Docker Compose
+#### Random
+
+`/api/random` will return a random image from the list of available images
+
+### Self-hosting
+
 TODO
-
-## Versioning
-catApi is a new idea I am planning to work on (while the idea, in general, is not new, it is for me in terms of working on a project. Leave me alone.) 
-and thus, we are currently on the V1 branch. V2 will *probably* introduce proper FrontEnd because let's admit it, a bare website that displays 
-**literally a picture** and nothing else looks bad. When, you may ask? Whenever the heck I want, I answer.
-
-## Contributing
-TODO
-
-## API Documentation (WIP)
-
-#### `/api/id`
-> return data about the specified image, by ID 
-> - **e.g. `http://localhost:3000/api/3`**
-#### `/api/list`
-> return a list of all images on the server (explicitly from the `/images` directory)
-> - e.g. `http://localhost:3000/api/list`
-
-#### `/api/random`
-> returns data about a random image on the server
-> - e.g `http://localhost:3000/api/random`
 
 ## License
 
-> **catApi** is licensed under the [MIT](https://github.com/NotAShelf/catApi/blob/v1/LICENSE) license.
+> **catApi** is licensed under the [MIT](https://github.com/NotAShelf/catApi/blob/v2/LICENSE) license.
