@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -108,7 +109,21 @@ func idHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid id", http.StatusBadRequest)
 		return
 	}
-	http.ServeFile(w, r, "images/"+images[i])
+
+	imagePath := "images/" + images[i]
+	if !isValidImagePath(imagePath) {
+		http.Error(w, "Invalid image path", http.StatusBadRequest)
+		return
+	}
+
+	http.ServeFile(w, r, imagePath)
+}
+
+func isValidImagePath(path string) bool {
+	if !filepath.HasPrefix(path, "images/") {
+		return false
+	}
+	return true
 }
 
 func listHandler(w http.ResponseWriter, r *http.Request) {
