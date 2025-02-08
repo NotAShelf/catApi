@@ -4,13 +4,12 @@ import (
 	"encoding/json"
 	"flag"
 	"html/template"
-	"io"
 	"log"
 	"math/rand"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -20,6 +19,49 @@ import (
 var images []string
 var logger = logrus.New()
 var port string
+
+// Okay I admit, this is bad. Just a workaround for now, until I figure out a clean
+// way of displaying all images in a grid.
+var tmpl = template.Must(template.New("index").Parse(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Gallery</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        .gallery {
+            column-count: 5;
+            column-gap: 8px;
+        }
+        .gallery a {
+            display: inline-block;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+        .gallery img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            display: block;
+        }
+        @media (max-width: 1024px) { .gallery { column-count: 4; } }
+        @media (max-width: 768px) { .gallery { column-count: 3; } }
+        @media (max-width: 480px) { .gallery { column-count: 2; } }
+    </style>
+</head>
+<body>
+    <h1>Image Gallery</h1>
+    <div class="gallery">
+        {{range $index, $img := .Images}}
+        <a href="/api/id?id={{$index}}">
+            <img src="/api/id?id={{$index}}" alt="Image {{$index}}">
+        </a>
+        {{end}}
+    </div>
+</body>
+</html>`))
 
 func init() {
 	// Log as JSON instead of the default ASCII formatter
@@ -40,13 +82,9 @@ func main() {
 		log.Fatalf("Error reading configuration file: %v", err)
 	}
 
-	port := viper.GetString("server.port")
+	port = viper.GetString("server.port")
+
 	flag.Parse()
-
-	if err := viper.ReadInConfig(); err != nil {
-		log.Fatalf("Error reading configuration file: %v", err)
-	}
-
 	images = getImages()
 
 	// Add request logging middleware
@@ -84,26 +122,20 @@ func getImages() []string {
 	return images
 }
 
-func sanitizeInput(input string) string {
-	return template.HTMLEscapeString(input)
-}
-
 func homeHandler(w http.ResponseWriter, r *http.Request) {
-	io.WriteString(w, "<html><body><div style=\"display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); grid-gap: 10px;\">")
-	for i := range images {
-		io.WriteString(w, `<a href="/api/id?id=`+strconv.Itoa(i)+`">`)
-		io.WriteString(w, `<img src="/api/id?id=`+strconv.Itoa(i)+`" style="width: 100%; height: auto;"/>`)
-		io.WriteString(w, `</a>`)
-	}
-	io.WriteString(w, "</div></body></html>")
+	w.Header().Set("Content-Type", "text/html")
+	tmpl.Execute(w, struct {
+		Images []string
+	}{Images: images})
 }
 
 func idHandler(w http.ResponseWriter, r *http.Request) {
-	id := sanitizeInput(r.URL.Query().Get("id"))
+	id := r.URL.Query().Get("id")
 	if id == "" {
 		http.Error(w, "Missing id", http.StatusBadRequest)
 		return
 	}
+
 	i, err := strconv.Atoi(id)
 	if err != nil || i < 0 || i >= len(images) {
 		http.Error(w, "Invalid id", http.StatusBadRequest)
@@ -120,7 +152,7 @@ func idHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func isValidImagePath(path string) bool {
-	if !filepath.HasPrefix(path, "images/") {
+	if !strings.HasPrefix(path, "images/") {
 		return false
 	}
 	return true
@@ -135,11 +167,13 @@ func listHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		imageList = append(imageList, imageInfo)
 	}
+
 	jsonData, err := json.Marshal(imageList)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonData)
 }
@@ -155,7 +189,9 @@ func logRequest(next http.Handler) http.Handler {
 }
 
 func randomHandler(w http.ResponseWriter, r *http.Request) {
-	rand.Seed(time.Now().UnixNano())
+	source := rand.NewSource(time.Now().UnixNano())
+	rand.New(source)
+
 	i := rand.Intn(len(images))
 	http.Redirect(w, r, "/api/id?id="+strconv.Itoa(i), http.StatusSeeOther)
 }
