@@ -48,14 +48,18 @@ func main() {
 
 	images = getImages()
 
-	http.HandleFunc("/", homeHandler)
-	http.HandleFunc("/api/id", idHandler)
-	http.HandleFunc("/api/list", listHandler)
-	http.HandleFunc("/api/random", randomHandler)
-
-	http.HandleFunc("/api/", func(w http.ResponseWriter, r *http.Request) {
+	// Add request logging middleware
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", homeHandler)
+	mux.HandleFunc("/api/id", idHandler)
+	mux.HandleFunc("/api/list", listHandler)
+	mux.HandleFunc("/api/random", randomHandler)
+	mux.HandleFunc("/api/", func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid API path", http.StatusNotFound)
 	})
+
+	// Wrap the mux with the logging middleware
+	http.Handle("/", logRequest(mux))
 
 	log.Println("Server started at port", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
@@ -67,11 +71,11 @@ func getImages() []string {
 		logger.WithError(err).Fatal("Error reading images directory")
 	}
 
-  if len(files) == 0 {
+	if len(files) == 0 {
 		logger.Warn("No images found in the images directory")
 	}
 
-  var images []string
+	var images []string
 	for _, file := range files {
 		images = append(images, file.Name())
 		logger.Info("Loaded image:", file.Name())
@@ -123,6 +127,16 @@ func listHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonData)
+}
+
+func logRequest(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		logger.Infof("Started %s %s", r.Method, r.URL.Path)
+		next.ServeHTTP(w, r)
+		duration := time.Since(start)
+		logger.Infof("Completed %s %s in %v", r.Method, r.URL.Path, duration)
+	})
 }
 
 func randomHandler(w http.ResponseWriter, r *http.Request) {
