@@ -66,7 +66,12 @@ func getImages() []string {
 	if err != nil {
 		logger.WithError(err).Fatal("Error reading images directory")
 	}
-	var images []string
+
+  if len(files) == 0 {
+		logger.Warn("No images found in the images directory")
+	}
+
+  var images []string
 	for _, file := range files {
 		images = append(images, file.Name())
 		logger.Info("Loaded image:", file.Name())
