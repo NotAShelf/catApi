@@ -2,8 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
 	"html/template"
+	"image"
 	"log"
 	"math/rand"
 	"net/http"
@@ -19,6 +19,13 @@ import (
 var images []string
 var logger = logrus.New()
 var port string
+
+// Cache for image list, it should expire every 10 minutes
+// but until it does, images should load faster in the frontend.
+var cachedImages struct {
+	images []string
+	expiry time.Time
+}
 
 // Okay I admit, this is bad. Just a workaround for now, until I figure out a clean
 // way of displaying all images in a grid.
@@ -78,13 +85,12 @@ func main() {
 	viper.SetConfigName("config") // name of config file (without extension)
 	viper.SetConfigType("yaml")   // REQUIRED if the config file does not have the extension in the name
 	viper.AddConfigPath(".")      // path to look for the config file in
+
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatalf("Error reading configuration file: %v", err)
 	}
 
 	port = viper.GetString("server.port")
-
-	flag.Parse()
 	images = getImages()
 
 	// Add request logging middleware
@@ -102,6 +108,14 @@ func main() {
 
 	log.Println("Server started at port", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
+}
+
+func getCachedImages() []string {
+	if time.Now().After(cachedImages.expiry) {
+		cachedImages.images = getImages()
+		cachedImages.expiry = time.Now().Add(10 * time.Minute)
+	}
+	return cachedImages.images
 }
 
 func getImages() []string {
@@ -126,11 +140,12 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	tmpl.Execute(w, struct {
 		Images []string
-	}{Images: images})
+	}{Images: getCachedImages()})
 }
 
 func idHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
+
 	if id == "" {
 		http.Error(w, "Missing id", http.StatusBadRequest)
 		return
@@ -159,11 +174,13 @@ func isValidImagePath(path string) bool {
 }
 
 func listHandler(w http.ResponseWriter, r *http.Request) {
-	imageList := []map[string]string{}
-	for i := range images {
-		imageInfo := map[string]string{
-			"id":  strconv.Itoa(i),
-			"url": "/api/id?id=" + strconv.Itoa(i),
+	imageList := []map[string]interface{}{}
+	for i := range getCachedImages() {
+		imageInfo := map[string]interface{}{
+			"id":       strconv.Itoa(i),
+			"url":      "/api/id?id=" + strconv.Itoa(i),
+			"filename": images[i],
+			"size":     getImageSize("images/" + images[i]),
 		}
 		imageList = append(imageList, imageInfo)
 	}
@@ -178,6 +195,35 @@ func listHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonData)
 }
 
+func getImageSize(path string) map[string]interface{} {
+	file, err := os.Open(path)
+	if err != nil {
+		logger.WithError(err).Error("Error opening file for size")
+		return nil
+	}
+	defer file.Close()
+
+	// Decode image to get dimensions (JPEG/PNG only)
+	img, _, err := image.Decode(file)
+	if err != nil {
+		logger.WithError(err).Error("Error decoding image")
+		return nil
+	}
+
+	// Get file info for size
+	fileInfo, err := file.Stat()
+	if err != nil {
+		logger.WithError(err).Error("Error getting file info")
+		return nil
+	}
+
+	return map[string]interface{}{
+		"width":  img.Bounds().Dx(),
+		"height": img.Bounds().Dy(),
+		"size":   fileInfo.Size(),
+	}
+}
+
 func logRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
@@ -189,8 +235,7 @@ func logRequest(next http.Handler) http.Handler {
 }
 
 func randomHandler(w http.ResponseWriter, r *http.Request) {
-	source := rand.NewSource(time.Now().UnixNano())
-	rand.New(source)
+	rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	i := rand.Intn(len(images))
 	http.Redirect(w, r, "/api/id?id="+strconv.Itoa(i), http.StatusSeeOther)
