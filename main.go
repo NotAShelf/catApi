@@ -18,6 +18,8 @@ import (
 
 var images []string
 var logger = logrus.New()
+var title string
+var header string
 var port string
 
 // Cache for image list, it should expire every 10 minutes
@@ -35,7 +37,7 @@ var tmpl = template.Must(template.New("index").Parse(`
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Gallery</title>
+    <title>{{.Title}}</title>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; }
         .gallery {
@@ -59,7 +61,7 @@ var tmpl = template.Must(template.New("index").Parse(`
     </style>
 </head>
 <body>
-    <h1>Image Gallery</h1>
+    <h1>{{.Header}}</h1>
     <div class="gallery">
         {{range $index, $img := .Images}}
         <a href="/api/id?id={{$index}}">
@@ -79,9 +81,8 @@ func init() {
 
 	// Set the log level (info, warning, error, etc.)
 	logger.SetLevel(logrus.InfoLevel)
-}
 
-func main() {
+	// Load config
 	viper.SetConfigName("config") // name of config file (without extension)
 	viper.SetConfigType("yaml")   // REQUIRED if the config file does not have the extension in the name
 	viper.AddConfigPath(".")      // path to look for the config file in
@@ -93,6 +94,12 @@ func main() {
 	port = viper.GetString("server.port")
 	images = getImages()
 
+	// Load site settings (title and header)
+	title = viper.GetString("site.title")
+	header = viper.GetString("site.header")
+}
+
+func main() {
 	// Add request logging middleware
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", homeHandler)
@@ -136,11 +143,18 @@ func getImages() []string {
 	return images
 }
 
+
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	tmpl.Execute(w, struct {
+		Title  string
+		Header string
 		Images []string
-	}{Images: getCachedImages()})
+	}{
+		Title:  title,
+		Header: header,
+		Images: getCachedImages(),
+	})
 }
 
 func idHandler(w http.ResponseWriter, r *http.Request) {

@@ -1,0 +1,6 @@
+server:
+  port: "3000"
+
+site:
+  title: "Cat Gallery"
+  header: "Cat Gallery"
