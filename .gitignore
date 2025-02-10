@@ -17,3 +17,6 @@ yarn-error.log
 # Build Artifacts
 result*
 catApi
+
+# Production Config
+config.yml
